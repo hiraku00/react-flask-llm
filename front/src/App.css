@@ -1,0 +1,30 @@
+.apple-loader {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+  position: relative;
+}
+.apple-loader:after {
+  content: " ";
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 8px;
+  border-radius: 50%;
+  border: 6px solid #bdc3c7;
+  border-color: #bdc3c7 transparent #bdc3c7 transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: apple-loader 1.2s linear infinite;
+  box-shadow: 0 0 10px #bdc3c7, 0 0 5px #bdc3c7;
+  opacity: 0.8;
+}
+@keyframes apple-loader {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
