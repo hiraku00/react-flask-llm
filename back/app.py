@@ -8,7 +8,16 @@ CORS(app)
 @app.route('/process', methods=['POST'])
 def process_text():
     data = request.get_json()
-    text = data['text']
+    messages = data['messages']
+
+    # メッセージのリストを作成
+    formatted_messages = [
+        {
+            "role": message['type'],
+            "content": message['text'],
+        }
+        for message in messages
+    ]
 
     llm = Llama(
         model_path="./models/codellama-7b-instruct.Q4_K_S.gguf",
@@ -18,17 +27,16 @@ def process_text():
 
     # Generate Chat format
     output = llm.create_chat_completion(
-        messages=[
-            {"role": "system", "content": "You are a helpful programing assistant."},
-            {
-                "role": "user",
-                "content": text,
-            },
-        ],
+        messages=formatted_messages,
         temperature=0.1,
         max_tokens=512,
     )
-    return jsonify({'text': output["choices"][0]["message"]["content"]})
+
+    # レスポンスがアシスタントからのものであれば、それをチャットの履歴に追加
+    if output["choices"][0]["message"]["role"] == "assistant":
+        formatted_messages.append(output["choices"][0]["message"])
+
+    return jsonify({'text': [message["content"] for message in formatted_messages if message["role"] == "assistant"]})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

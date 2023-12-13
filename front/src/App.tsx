@@ -6,6 +6,7 @@ import "./App.css";
 function App() {
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
   const [history, setHistory] = useState(
     [] as { type: string; text: string }[]
   );
@@ -19,19 +20,25 @@ function App() {
 
   const processText = async () => {
     setIsLoading(true);
+    setIsDisabled(true);
     try {
       const response = await axios.post("http://localhost:5001/process", {
-        text,
+        messages: history.concat({ type: "user", text: text.trim() }),
       });
-      setHistory(prev => [
+
+      setHistory((prev) => [
         ...prev,
-        { type: "input", text },
-        { type: "output", text: response.data.text.split('.').map((sentence: string, i: number) => <p key={i}>{sentence}.</p>) },
+        { type: "user", text },
+        { type: "assistant", text: response.data.text.join(' ') },
       ]);
+      //debug
+      console.log(history)
+      setText(""); // 入力フィールドをクリア
     } catch (error) {
       console.error(error);
     } finally {
       setIsLoading(false);
+      setIsDisabled(false);
       scrollToBottom();
     }
   };
@@ -50,16 +57,16 @@ function App() {
           <div
             key={i}
             className={`p-4 my-2 ${
-              item.type === "input"
-                ? "rounded-br-none self-end"
-                : "rounded-bl-none self-start"
+              item.type === "user"
+                ? "rounded-br-none self-end text-white"
+                : "rounded-bl-none self-start text-black"
             }`}
           >
             <div
               className={`border border-gray-300 rounded-md p-2 ${
-                item.type === "input"
-                  ? "bg-green-500 text-white w-auto inline-block float-right"
-                  : "w-3/4 bg-white"
+                item.type === "user"
+                  ? "w-auto inline-block float-right bg-green-500 max-w-[80%]"
+                  : "w-auto inline-block float-left bg-white max-w-[80%]"
               }`}
             >
               {item.text}
@@ -81,12 +88,15 @@ function App() {
           )}
         </AnimatePresence>
         <motion.textarea
+          id="userInput"
+          name="userInput"
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-2/3 h-20 overflow-hidden"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
+          disabled={isDisabled}
         />
         <motion.button
           onClick={processText}
@@ -101,6 +111,6 @@ function App() {
       <div className="w-full h-5"></div>
     </div>
   );
-};
+}
 
 export default App;
